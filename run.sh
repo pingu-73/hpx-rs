@@ -10,7 +10,7 @@ export LD_FLAGS="-L$HPX_INSTALLED_DIR/lib -L $_HOME/workspace/hpx/build/lib -L $
 export LD_LIBRARY_PATH="$HPX_INSTALLED_DIR/lib:$_HOME/workspace/hpx/build/lib:${HWLOC_SRC}/lib:${Boost_DIR}/stage/lib:$Boost_DIR/stage/lib"
 export DYLD_LIBRARY_PATH="$HPX_INSTALLED_DIR/lib:$Boost_DIR/stage/lib:$_HOME/workspace/hpx/build/lib"
 
-export CXXFLAGS="${CPPFLAGS}"" -I./include -I$HPX_INSTALLED_DIR/include  -I$Boost_DIR -I$HWLOC_SRC/include"
+export CXXFLAGS="-g -O0 ${CPPFLAGS}"" -I./include -I$HPX_INSTALLED_DIR/include  -I$Boost_DIR -I$HWLOC_SRC/include"
 
 ./target/debug/hpx-rs-demo
 
@@ -21,4 +21,4 @@ unset Boost_DIR
 unset HWLOC_SRC
 unset LD_FLAGS
 unset CXXFLAGS
-unset _HOME
+unset _HOME         
