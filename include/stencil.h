@@ -10,6 +10,8 @@
 #include <iostream>
 #include <vector>
 
+#include "rust/cxx.h"
+
 // bool header = true; // print csv heading
 double k = 0.5; // heat transfer coefficient
 double dt = 1.; // time step
@@ -57,6 +59,11 @@ typedef hpx::shared_future<partition_data> partition;
 typedef std::vector<partition> space;
 typedef hpx::future<space> amoolspace;
 
+std::shared_ptr<space>
+get_space_from_amool_space(std::shared_ptr<amoolspace> as) {
+  return std::make_shared<space>(as->get());
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 struct stepper {
   // Our data for one time step
@@ -90,7 +97,7 @@ struct stepper {
 
   // do all the work on 'np' partitions, 'nx' data points each, for 'nt'
   // time steps
-  std::unique_ptr<amoolspace> do_work(std::size_t np, std::size_t nx,
+  std::shared_ptr<amoolspace> do_work(std::size_t np, std::size_t nx,
                                       std::size_t nt) const {
     // U[t][i] is the state of position i at time t.
     std::vector<space> U(2);
@@ -104,75 +111,66 @@ struct stepper {
     auto Op = hpx::unwrapping(&stepper::heat_part);
 
     // Actual time step loop
-    // std::cout<<"heere"<<nt<<" "<<nx<<" "<<np <<"\n";
     for (std::size_t t = 0; t != nt; ++t) {
       space const &current = U[t % 2];
       space &next = U[(t + 1) % 2];
 
       typedef hpx::util::counting_iterator<std::size_t> iterator;
 
-      // std::cout<<"i "<<*iterator(np)<<"\n";
-      // std::cout<<hpx::this_thread::get_id()<<"
-      // "<<hpx::threads::get_thread_count()<<"\n";
-      hpx::for_each(hpx::execution::par, iterator(0), iterator(np - 1),
+      hpx::for_each(hpx::execution::par, iterator(0), iterator(np),
                     [&next, &current, np, &Op](std::size_t i) {
                       next[i] = hpx::dataflow(
                           hpx::launch::async, Op, current[idx(i - 1, np)],
                           current[i], current[idx(i + 1, np)]);
+                      //   std::cout << "i : " << i << " current[i] " <<
+                      //   current[i].get()[0]
+                      //             << "\n";
                     });
     }
 
-    return std::make_unique<amoolspace>(hpx::when_all(U[nt % 2]));
+    return std::make_shared<amoolspace>(hpx::when_all(U[nt % 2]));
   }
 };
 
-inline auto new_stepper() { return std::make_unique<stepper>(); }
+void inline rust_wait_all_space(std::shared_ptr<space> t) { hpx::wait_all(*t); }
+
+inline auto new_stepper() { return std::make_shared<stepper>(); }
+
+inline void rust_print_space(std::shared_ptr<space> t) {
+  auto solution = *t;
+  for (std::size_t i = 0; i < solution.size(); ++i)
+    std::cout << "U[" << i << "] = " << solution[i].get() << std::endl;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 inline void amool() {
-  //     std::uint64_t np = vm["np"].as<std::uint64_t>();    // Number of
-  //     partitions. std::uint64_t nx =
-  //         vm["nx"].as<std::uint64_t>();    // Number of grid points.
-  //     std::uint64_t nt = vm["nt"].as<std::uint64_t>();    // Number of steps.
-
-  //     if (vm.count("no-header"))
-  //         header = false;
-
-  //     // Create the stepper object
+  // Create the stepper object
   stepper step;
 
   // Measure execution time.
   std::uint64_t t = hpx::chrono::high_resolution_clock::now();
   std::uint64_t elapsed = 0;
 
-  // // Print the final solution
-  // if (vm.count("result"))
-  // {
+  //   try {
+  // Execute nt time steps on nx grid points and print the final solution.
+  auto result = (step.do_work(10, 10, 45));
 
-  try {
-    // Execute nt time steps on nx grid points and print the final solution.
-    auto result = (step.do_work(10, 10, 45));
+  space solution = result->get();
 
-    space solution = result->get();
+  // std::cout << "hpx threead id " << hpx::this_thread::get_id() << " "
+  //           << hpx::threads::get_thread_count() << "\n";
 
-    std::cout<<"hpx threead id "<<hpx::this_thread::get_id() <<" "<< hpx::threads::get_thread_count()<<"\n";
+  hpx::wait_all(solution);
 
-    hpx::wait_all(solution);
+  // space solution = (*result).get();
 
-    // space solution = (*result).get();
+  elapsed = hpx::chrono::high_resolution_clock::now() - t;
+  for (std::size_t i = 0; i < solution.size(); ++i)
+    std::cout << "U[" << i << "] = " << solution[i].get() << std::endl;
+  // }
+  //   } catch (const std::exception &e) {
+  //     std::cerr << e.what() << '\n';
+  //   }
 
-    elapsed = hpx::chrono::high_resolution_clock::now() - t;
-    for (std::size_t i = 0; i < solution.size(); ++i)
-      std::cout << "U[" << i << "] = " << solution[i].get() << std::endl;
-    // }
-  } catch (const std::exception &e) {
-    std::cerr << e.what() << '\n';
-  }
-
-  std::cout << "\nelapased: " << elapsed << "\n";
-
-  // std::uint64_t const os_thread_count = hpx::get_os_thread_count();
-  // print_time_results(os_thread_count, elapsed, nx, np, nt, header);
-
-  // return hpx::local::finalize();
+  std::cout << "\ncpp elapased: " << elapsed << "\n";
 }
