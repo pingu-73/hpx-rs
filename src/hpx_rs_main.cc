@@ -19,3 +19,26 @@ std::uint64_t fibonacci_hpx(std::uint64_t n) {
 
   return n1.get() + n2.get(); // wait for the Futures to return their values
 }
+
+
+
+//hpx_main call hpx_main_rust
+int hpx_main(int argc, char* argv[]) {
+    int result = hpx_main_rust(argc, argv);
+
+    return hpx::finalize();
+}
+
+
+std::int32_t hpx_init() {
+    return hpx::init();
+}
+
+void hpx_cpy(const int* src, const int* src_end, int* dest) {
+    hpx::copy(hpx::execution::par, src, src_end, dest);
+}
+
+
+int main(int argc, char* argv[]) {
+    return hpx::init(argc, argv);
+}

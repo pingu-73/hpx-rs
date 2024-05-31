@@ -1,7 +1,7 @@
 [package]
 name = "hpx-rs-demo"
 version = "0.0.0"
-authors = ["Shreyas Atre <shreyasatre16@gmail.com>"]
+authors = ["Shreyas Atre <shreyasatre16@gmail.com>, Dikshant<dikshant.073@gmail.com>"]
 description = "HPX rust migration"
 edition = "2021"
 license = "MIT OR Apache-2.0"
