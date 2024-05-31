@@ -17,6 +17,6 @@ template <typename T> T fibonacci(T n);
 std::uint64_t fibonacci_hpx(std::uint64_t n);
 
 extern "C" std::int32_t hpx_init();
-extern "C" void hpx_cpy(const int* src, const int* src_end, int* dest);
+extern "C" void copy_hpx(const int* src, const int* src_end, int* dest);
 
 extern "C" int hpx_main_rust(int argc, char* argv[]);

@@ -34,7 +34,7 @@ std::int32_t hpx_init() {
     return hpx::init();
 }
 
-void hpx_cpy(const int* src, const int* src_end, int* dest) {
+void copy_hpx(const int* src, const int* src_end, int* dest) {
     hpx::copy(hpx::execution::par, src, src_end, dest);
 }
 

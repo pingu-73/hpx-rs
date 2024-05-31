@@ -8,7 +8,7 @@ mod ffi {
         fn fibonacci_hpx(u: u64) -> u64;
 
         fn hpx_init() -> i32;
-        unsafe fn hpx_cpy(src: *const i32, src_end: *const i32, dest: *mut i32);
+        unsafe fn copy_hpx(src: *const i32, src_end: *const i32, dest: *mut i32);
     }
 }
 
@@ -28,7 +28,7 @@ pub extern "C" fn hpx_main_rust(_argc: i32, _argv: *mut *mut i8) -> i32 {
     let mut dest = vec![0; src.len()];
 
     unsafe {
-        ffi::hpx_cpy(src.as_ptr(), src.as_ptr().add(src.len()), dest.as_mut_ptr());
+        ffi::copy_hpx(src.as_ptr(), src.as_ptr().add(src.len()), dest.as_mut_ptr());
     }
     println! {"Destination: {:?}", dest};
 
