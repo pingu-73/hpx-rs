@@ -12,11 +12,19 @@
 #include <hpx/iostream.hpp>
 #include <iostream>
 
+inline std::int32_t start() { return hpx::start(nullptr, 0, nullptr); }
+
+inline std::int32_t stop() {
+  hpx::post([]() { hpx::finalize(); });
+  return hpx::stop();
+}
+
+extern "C" std::int32_t hpx_init();
+
+extern "C" int hpx_main_rust(int argc, char* argv[]);
+
 template <typename T> T fibonacci(T n);
 
 std::uint64_t fibonacci_hpx(std::uint64_t n);
 
-extern "C" std::int32_t hpx_init();
 extern "C" void copy_hpx(const int* src, const int* src_end, int* dest);
-
-extern "C" int hpx_main_rust(int argc, char* argv[]);

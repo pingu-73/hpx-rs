@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 #[cxx::bridge]
 mod ffi {
     unsafe extern "C++" {
@@ -7,8 +9,11 @@ mod ffi {
         fn fibonacci(u: u64) -> u64;
         fn fibonacci_hpx(u: u64) -> u64;
 
-        fn hpx_init() -> i32;
         unsafe fn copy_hpx(src: *const i32, src_end: *const i32, dest: *mut i32);
+        
+        fn hpx_init() -> i32;
+        fn start() -> i32;
+        fn stop() -> i32;
     }
 }
 
